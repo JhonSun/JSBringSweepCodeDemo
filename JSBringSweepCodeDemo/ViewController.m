@@ -25,6 +25,10 @@
     [super viewDidLoad];
     
     [self.view.layer insertSublayer:self.previewLayer atIndex:0];
+    
+    for (AVCaptureDevice *allDevice in [AVCaptureDevice devices]) {
+        NSLog(@"摄像头位置%ld", (long)allDevice.position);
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -42,6 +46,17 @@
 - (AVCaptureDevice *)device {
     if (!_device) {
         _device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        NSError *error = nil;
+        if ([_device lockForConfiguration:&error]) {
+            //设置闪光灯
+            _device.flashMode = AVCaptureFlashModeAuto;
+            //设置手电筒，必须要两个一起设置，闪光灯才能正常工作
+            _device.torchMode = AVCaptureTorchModeAuto;
+            //设置聚焦方式
+            _device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
+        } else {
+            NSLog(@"设置失败，失败原因：%@", [error localizedDescription]);
+        }
     }
     return _device;
 }
@@ -117,7 +132,7 @@
 }
 
 //获取扫描区域比例，原点在左上角，x与y颠倒
-//AVCaptureMetadataOutput的rectOfInterest设置扫描区域g
+//AVCaptureMetadataOutput的rectOfInterest设置扫描区域
 - (CGRect)getScanScropFromScanArea:(CGRect)scanAreaFrame inView:(CGRect)frame {
     CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
     CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
